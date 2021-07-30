@@ -15,6 +15,7 @@
 	<description>API for Website</description>
 	<properties>
 		<java.version>16</java.version>
+		<jar.finalName>${project.name}-1.0.0</jar.finalName>
 	</properties>
 	<dependencies>
 		<dependency>
