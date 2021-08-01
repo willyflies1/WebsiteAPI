@@ -21,6 +21,10 @@ public class UserService {
         return userRepository.getByLastname(lastname);
     }
 
+    public User findByEmail(String email){
+        return userRepository.getByEmail(email);
+    }
+
 //    public Optional<User> getUserById(String id) {
 //        return userRepository.findById(id);
 //    }

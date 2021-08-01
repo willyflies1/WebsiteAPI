@@ -8,9 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,9 +28,32 @@ public class UserController {
         return new ResponseEntity<List<User>>(listUsers, HttpStatus.OK);
     }
 
-    @GetMapping("/users/{lastName}")
-    public ResponseEntity<User> findByLastname(@PathVariable String lastName) {
-        return new ResponseEntity<User>(userService.findByLastname(lastName), HttpStatus.OK);
+    @GetMapping("/users/lastname/{lastname}")
+    public ResponseEntity<User> findByLastname(@PathVariable String lastname) {
+        return new ResponseEntity<User>(userService.findByLastname(lastname), HttpStatus.OK);
+    }
+
+    @GetMapping("/users/email/{email}")
+    public ResponseEntity<User> findByEmail(@PathVariable String email) {
+        User userByEmail = userService.findByEmail(email);
+        System.out.println("User by Email" + userByEmail);
+        if(userByEmail != null){
+            System.out.println("HttpStatus.OK" + userByEmail);
+            return new ResponseEntity<User>(userService.findByEmail(email), HttpStatus.OK);
+        } else if ( userByEmail == null){
+            System.out.println("HttpStatus.NOT_FOUND" + userByEmail);
+            return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+        }
+        System.out.println("HttpStatus.BAD_REQUEST" + userByEmail);
+        return new ResponseEntity<User>(HttpStatus.BAD_REQUEST);
+    }
+
+    @PostMapping("/users/create")
+    public ResponseEntity<User> create(@RequestBody User user){
+        User newUser = user;
+        System.out.println("Create User" + newUser);
+        userRepository.save(user);
+        return new ResponseEntity<User>(newUser, HttpStatus.CREATED);
     }
 
 }
