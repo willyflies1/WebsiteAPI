@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class UserController {
@@ -21,7 +22,6 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> listAll(Model model) {
-//        List<User> listUsers = userRepository.findAll();
         List<User> listUsers = userService.getAllUsers();
         model.addAttribute("listUsers", listUsers);
 
@@ -54,6 +54,25 @@ public class UserController {
         System.out.println("Create User" + newUser);
         userRepository.save(user);
         return new ResponseEntity<User>(newUser, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/users/{id}")
+    public ResponseEntity<User> modifyUser(@PathVariable UUID id, @RequestBody User user) {
+        User userToModify = userRepository.getByUUID(id);
+//                .orElseThrow(()) -> new ResourceNotFoundException("User not found for this id :: " + id));
+        userToModify.setFirstName(user.getFirstname());
+        userToModify.setLastName(user.getLastname());
+        userToModify.setEmail(user.getEmail());
+        userToModify.setPassword(user.getPassword());
+        final User updatedUser = userToModify;
+        userRepository.save(updatedUser);
+        return new ResponseEntity<User>(updatedUser, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<User> deleteById(@PathVariable UUID id) {
+        userRepository.deleteById(id);
+        return new ResponseEntity<User>(userService.findById(id), HttpStatus.OK);
     }
 
 }

@@ -33,7 +33,7 @@ public class User {
     private OffsetDateTime createdOn = OffsetDateTime.now();
 
     @Column(name = "last_login", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private OffsetDateTime lastLogin = OffsetDateTime.now();
+    private OffsetDateTime lastLogin;
 
     public User() {}
 
@@ -43,7 +43,7 @@ public class User {
         this.lastname = lastname;
         this.email = email;
         this.password = password;
-        this.createdOn = this.lastLogin = OffsetDateTime.now();
+        this.createdOn = OffsetDateTime.now();
     }
 
     /* Constructors */
