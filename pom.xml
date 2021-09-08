@@ -9,13 +9,13 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.api</groupId>
-	<artifactId>website</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>website</name>
-	<description>API for Website</description>
+	<artifactId>WebsiteRestAPI</artifactId>
+	<version>0.0.2</version>
+	<name>WebsiteRestAPI</name>
+	<description>Rest API for Website</description>
 	<properties>
 		<java.version>16</java.version>
-		<jar.finalName>${project.name}-1.0.0</jar.finalName>
+		<jar.finalName>${project.name}-${project.version}</jar.finalName>
 	</properties>
 	<dependencies>
 		<dependency>
