@@ -4,9 +4,11 @@ import com.api.website.models.MinerDashboard;
 import com.api.website.models.PoolStatatistics;
 import com.api.website.modelsDto.MinerDashboardDto;
 import com.api.website.modelsDto.PoolStatsDto;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,14 +41,15 @@ public class EthermineController {
         return resultingPoolStats;
     }
 
-//    public ResponseEntity<MinerRequest> getMinerDashboard(@PathVariable String miner) {
     @GetMapping("/ethereum/miner/{miner}/dashboard")
-    public MinerDashboard getMinerDashboard(@PathVariable String miner){
+    public @ResponseBody
+    ResponseEntity<MinerDashboard> getMinerDashboard(@PathVariable String miner){
         String targetUri = baseUri + "/miner/" + miner + "/dashboard";
         RestTemplate restTemplate = new RestTemplate();
         final ResponseEntity<MinerDashboardDto> minerDashboardDto = restTemplate.getForEntity(targetUri, MinerDashboardDto.class);
         final MinerDashboard minerDashboard = minerDashboardDto.getBody().getData();
-        return minerDashboard;
-        //        return new ResponseEntity<MinerRequest>(HttpStatus.OK);
+        return minerDashboard != null
+            ? new ResponseEntity<MinerDashboard>(minerDashboard, HttpStatus.OK)
+            : new ResponseEntity<MinerDashboard>(minerDashboard, HttpStatus.BAD_REQUEST);
     }
 }
