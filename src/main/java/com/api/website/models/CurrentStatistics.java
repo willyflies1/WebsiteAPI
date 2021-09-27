@@ -2,10 +2,12 @@ package com.api.website.models;
 
 public class CurrentStatistics extends MinerStatistics {
     private String lastSeen;
-    private long unpaid;
-    private long unconfirmed;
+    private double unpaid;
+    private double unconfirmed;
+    private boolean formated = false;
 
-    public CurrentStatistics(){}
+    public CurrentStatistics() {
+    }
 
     public String getLastSeen() {
         return lastSeen;
@@ -15,15 +17,15 @@ public class CurrentStatistics extends MinerStatistics {
         this.lastSeen = lastSeen;
     }
 
-    public long getUnpaid() {
-        return unpaid;
+    public double getUnpaid() {
+        return unpaid / Math.pow(10, 17);
     }
 
     public void setUnpaid(long unpaid) {
         this.unpaid = unpaid;
     }
 
-    public long getUnconfirmed() {
+    public double getUnconfirmed() {
         return unconfirmed;
     }
 

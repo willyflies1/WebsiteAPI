@@ -40,6 +40,10 @@ public class EthermineController {
         String response = restTemplate.getForObject(targetUri, String.class);
         return resultingPoolStats;
     }
+    // statistics.unpaid
+    // 5711201924212990     0.005.. ether
+    // 20921350950524216    0.02... ether
+    // 1000000000000000000  1.00... ether
 
     @GetMapping("/ethereum/miner/{miner}/dashboard")
     public @ResponseBody

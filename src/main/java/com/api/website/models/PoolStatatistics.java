@@ -3,13 +3,9 @@ package com.api.website.models;
 
 public class PoolStatatistics {
     private TopMiner topMiners[];
-
     private MinedBlock minedBlocks[];
-
     private PoolStats poolStats;
-
     private Price price;
-
     private Estimates estimates;
 
     public PoolStatatistics() {

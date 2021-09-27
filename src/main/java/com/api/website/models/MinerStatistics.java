@@ -9,6 +9,9 @@ public class MinerStatistics {
     private long invalidShares;
     private long staleShares;
     private long activeWorkers;
+    // Variables needed for logic to format currency
+    private MinerCurrency selectedCurrency = MinerCurrency.ETH;
+    private boolean formated = false;
 
     public MinerStatistics(){}
 

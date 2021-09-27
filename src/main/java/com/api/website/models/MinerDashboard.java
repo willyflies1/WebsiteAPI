@@ -1,5 +1,6 @@
 package com.api.website.models;
 
+
 public class MinerDashboard {
     private MinerStatistics[] statistics;
     private Workers[] workers;
