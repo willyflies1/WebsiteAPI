@@ -15,7 +15,9 @@ public class CandlestickDataDto {
     private double takerBuyQuoteVolume;
 
     // ** Constructor
-    public CandlestickDataDto(double openTime, double open, double high, double low, double close, double volume, double closeTime, double quoteAssetVolume, int numberOfTrades, double takerBuyAssetVolume, double takerBuyQuoteVolume, double ignore) {
+    public CandlestickDataDto(double openTime, double open, double high, double low, double close, double volume,
+                              double closeTime, double quoteAssetVolume, int numberOfTrades, double takerBuyAssetVolume,
+                              double takerBuyQuoteVolume, double ignore) {
         this.openTime = openTime;
         this.open = open;
         this.high = high;

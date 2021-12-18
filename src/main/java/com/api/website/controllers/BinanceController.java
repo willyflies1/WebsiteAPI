@@ -2,13 +2,18 @@ package com.api.website.controllers;
 
 import com.api.website.models.CandlestickData;
 import com.api.website.modelsDto.CandlestickDataDto;
+import com.api.website.modelsDto.TickerPriceChangeStatisticsDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,7 +23,46 @@ import java.util.stream.Collectors;
 @RestController
 public class BinanceController {
 
+    Logger logger = LoggerFactory.getLogger(LoggingController.class);
+
     final String baseUri = "https://api.binance.com/api/v3";
+
+    @GetMapping("/ticker/24hr")
+    @ResponseBody
+    public ResponseEntity<TickerPriceChangeStatisticsDto> getTickerRolling24Hr(
+            @RequestParam(name = "symbol", required = false) String symbol
+    ) {
+        String targetUri = baseUri + "/ticker/24hr";
+        // Add optional values to targerUri
+        if (symbol != null) {
+            targetUri += "?symbol=" + symbol;
+        }
+        logger.info("Target URI: " + targetUri);
+
+        // Setup request
+        RestTemplate restTemplate = new RestTemplate();
+        // Get data from binance
+        try {
+            final ResponseEntity<TickerPriceChangeStatisticsDto> tickerResponse = restTemplate.getForEntity(targetUri,
+                    TickerPriceChangeStatisticsDto.class);
+            logger.info("Succesfully received response from binance api", tickerResponse.getBody());
+            logger.info((tickerResponse.getBody().toString()));
+            return tickerResponse;
+
+        }
+        catch (HttpMessageConversionException exc) {
+            logger.info("Failed to get correct response from binance api", targetUri, exc);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Trouble building response from " +
+                    "Binance", exc);
+        }
+
+        // ** Store DtO in Database
+
+        // ** Transfer DtO to Entity
+
+        // ** Return Entity
+
+    }
 
     @GetMapping("/klines")
     @ResponseBody
