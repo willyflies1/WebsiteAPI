@@ -18,6 +18,11 @@ public class WebsiteApplication implements CommandLineRunner {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Bean
+	public ModelMapper modelMapper() {
+		return  new ModelMapper();
+	}
+
 
 
 	public static void main(String[] args) {
@@ -38,9 +43,5 @@ public class WebsiteApplication implements CommandLineRunner {
 //		});
 	}
 
-	@Bean
-	public ModelMapper modelMapper() {
-		return  new ModelMapper();
-	}
 
 }
