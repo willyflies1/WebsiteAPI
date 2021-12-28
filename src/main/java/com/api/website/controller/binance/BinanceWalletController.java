@@ -1,5 +1,6 @@
-package com.api.website.controller;
+package com.api.website.controller.binance;
 
+import com.api.website.controller.LoggingController;
 import com.api.website.dto.*;
 import com.api.website.model.CandlestickData;
 import com.api.website.model.SnapshotType;
