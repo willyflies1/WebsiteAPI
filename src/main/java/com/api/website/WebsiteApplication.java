@@ -1,6 +1,6 @@
 package com.api.website;
 
-import com.api.website.repositories.UserRepository;
+import com.api.website.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -22,7 +22,6 @@ public class WebsiteApplication implements CommandLineRunner {
 	public ModelMapper modelMapper() {
 		return  new ModelMapper();
 	}
-
 
 
 	public static void main(String[] args) {
