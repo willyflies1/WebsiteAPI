@@ -1,12 +1,12 @@
 package com.api.website.controller;
 
+import com.api.website.dto.*;
 import com.api.website.model.CandlestickData;
 import com.api.website.model.SnapshotType;
 import com.api.website.model.TickerPriceChangeStatistics;
-import com.api.website.dto.CandlestickDataDto;
-import com.api.website.dto.TickerPriceChangeStatisticsDto;
 import com.api.website.service.Request;
 import com.binance.connector.client.impl.SpotClientImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-public class BinanceController {
+public class BinanceWalletController {
 
     //    private static String BINANCE_API_KEY = System.getenv("BINANCE_API_KEY");
 //    private static String BINANCE_SECRET_KEY = System.getenv("BINANCE_SECRET_KEY");
@@ -40,18 +40,21 @@ public class BinanceController {
     final String baseUrl = "https://api.binance.com";
     final String baseUrlUS = "https://api.binance.us";
     final String testBaseUrl = "https://testnet.binance.vision";    // /api/v3
-//    final String signedBaseUrl = "https://api.binance.com/sapi/v1";
+    //    final String signedBaseUrl = "https://api.binance.com/sapi/v1";
     LinkedHashMap<String, Object> parameters = new LinkedHashMap<String, Object>();
     Request request;
 
     @Autowired
     ModelMapper modelMapper;
 
+    ObjectMapper mapper = new ObjectMapper();
+
+
     Logger logger = LoggerFactory.getLogger(LoggingController.class);
 
     @GetMapping("wallet/accountSnapshot")
     @ResponseBody
-    public ResponseEntity<String> getWalletAccountSnapshot(
+    public ResponseEntity<WalletAccountSnapshotDto> getAccountSnapshot(
             @RequestParam(name = "type", required = true, defaultValue = "SPOT") String type,
             @RequestParam(name = "startTime", required = false) Optional<Long> startTime,
             @RequestParam(name = "endTime", required = false) Optional<Long> endTime,
@@ -71,17 +74,70 @@ public class BinanceController {
         if (!limit.isEmpty()) parameters.put("limit", limit.get().toString());
         if (!recvWindow.isEmpty())
             parameters.put("recvWindow", recvWindow.get().toString());    // Default is 5000 on Binance side
-        ResponseEntity<String> binanceResponse;
+        ResponseEntity<WalletAccountSnapshotDto> binanceResponse;
         try {
+            // Binance Connector
             SpotClientImpl client = new SpotClientImpl(BINANCE_API_KEY, BINANCE_SECRET_KEY, baseUrlUS);
             String response = client.createWallet().accountSnapshot(parameters);
-            binanceResponse = new ResponseEntity<>(response, HttpStatus.OK);
+            parameters.clear();
+            String allCoinsResponse = client.createWallet().depositHistory(parameters);
+            logger.info("Deposit History" + allCoinsResponse);
+            // Map Object for response
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> map = mapper.readValue(response, Map.class);
+            WalletAccountSnapshotDto dto = mapper.readValue(response, WalletAccountSnapshotDto.class);
+            logger.info("Response collected. Sending: " + dto.toString());
+            binanceResponse = new ResponseEntity<WalletAccountSnapshotDto>(dto, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Failed to collect response", e);
-            return new ResponseEntity<String>(e.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<WalletAccountSnapshotDto>(new WalletAccountSnapshotDto(), HttpStatus.BAD_REQUEST);
         }
         parameters.clear();
         return binanceResponse;
+    }
+
+    @GetMapping("/capital/deposit/hisrec")
+    @ResponseBody
+    public ResponseEntity<DepositHistoryCollectionDto> getDepositHistory(
+            @RequestParam(name = "coin", required = false) Optional<String> coin,
+            @RequestParam(name = "status", required = false) Optional<Integer> status,
+            @RequestParam(name = "startTime", required = false) Optional<Long> startTime,
+            @RequestParam(name = "endTime", required = false) Optional<Long> endTime,
+            @RequestParam(name = "offset", required = false) Optional<Integer> offset,
+            @RequestParam(name = "limit", required = false) Optional<Integer> limit,
+            @RequestParam(name = "recvWindow", required = false) Optional<Long> recvWindow
+    ) {
+        ResponseEntity<DepositHistoryCollectionDto> binanceResponse = null;
+
+        // ** Add parameters to LinkedHashMap
+        if (!coin.isEmpty()) parameters.put("coin", coin.get());
+        if (!status.isEmpty()) parameters.put("status", status.get());
+        if (!startTime.isEmpty()) parameters.put("startTime", startTime.get());
+        if (!endTime.isEmpty()) parameters.put("endTime", endTime.get());
+        if (!offset.isEmpty()) parameters.put("offset", offset.get());
+        if (!limit.isEmpty()) parameters.put("limit", limit.get());
+        if (!recvWindow.isEmpty()) parameters.put("recvWindow", recvWindow.get());
+
+        // ** Get data from Binance endpoint
+        try {
+            SpotClientImpl client = new SpotClientImpl(BINANCE_API_KEY, BINANCE_SECRET_KEY, baseUrlUS);
+            String response = client.createWallet().depositHistory(parameters);
+            logger.info("Deposit History (Response): \n" + response);
+            modelMapper = new ModelMapper();
+            ArrayList<DepositHistoryDto> list = mapper.readValue(response,
+                    ArrayList.class);
+            DepositHistoryCollectionDto dto = modelMapper.map(response, DepositHistoryCollectionDto.class);
+            dto.setDeposits(list);
+            binanceResponse = new ResponseEntity<DepositHistoryCollectionDto>(dto, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        // ** Add to Db if needed
+
+        // ** Send response back on success
+        return binanceResponse != null
+                ? binanceResponse
+                : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @GetMapping("/ticker/24hr")
@@ -248,4 +304,6 @@ public class BinanceController {
     private String getTimestamp() {
         return "timestamp=" + String.valueOf(System.currentTimeMillis());
     }
+
+
 }
