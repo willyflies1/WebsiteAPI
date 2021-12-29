@@ -30,16 +30,6 @@ public class WebsiteApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-//		String sql = "INSERT INTO users ( firstName, lastName, email, password ) VALUES ("
-//				+ "'Maxxon', 'Jacques', 'max@email.com', 'max123')";
-//		int rows = jdbcTemplate.update(sql);
-//		if(rows > 0){
-//			System.out.println("A new row has been inserted to 'users'.");
-//		}
-//		List<User> users = userRepository.listAll();
-//		users.forEach(user -> {
-//			System.out.println(user);
-//		});
 	}
 
 

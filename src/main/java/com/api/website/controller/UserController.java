@@ -75,4 +75,9 @@ public class UserController {
         return new ResponseEntity<User>(userService.findById(id), HttpStatus.OK);
     }
 
+    @GetMapping("test/user")
+    public ResponseEntity<String> user(){
+        return new ResponseEntity<String>("Success!", HttpStatus.OK);
+    }
+
 }
