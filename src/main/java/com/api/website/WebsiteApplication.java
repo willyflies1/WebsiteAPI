@@ -8,7 +8,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.servlet.http.HttpSession;
+import java.util.Collections;
+import java.util.Map;
+
+@CrossOrigin(origins="*")	// http://localhost:4200
 @SpringBootApplication
 public class WebsiteApplication implements CommandLineRunner {
 
@@ -30,6 +37,11 @@ public class WebsiteApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
+	}
+
+	@RequestMapping("/token")
+	public Map<String,String> token(HttpSession session){
+		return Collections.singletonMap("token", session.getId());
 	}
 
 

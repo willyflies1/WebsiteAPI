@@ -3,15 +3,24 @@ package com.api.website.controller;
 
 import com.api.website.model.User;
 import com.api.website.repository.UserRepository;
+import com.api.website.security.model.AuthenticationRequest;
+import com.api.website.security.model.AuthenticationResponse;
+import com.api.website.security.service.JwtUtil;
 import com.api.website.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+
 
 @RestController
 public class UserController {
@@ -19,6 +28,33 @@ public class UserController {
     private UserRepository userRepository;
     @Autowired
     private UserService userService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> createAuthenticationToken(
+            @RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(),
+                            authenticationRequest.getPassword())
+            );
+
+        } catch (BadCredentialsException e) {
+            throw new Exception("Incorrect username or password", e);
+        }
+
+        final UserDetails userDetails = userDetailsService
+                .loadUserByUsername(authenticationRequest.getUsername());
+        final String jwt = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+
+    }
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> listAll(Model model) {
@@ -37,10 +73,10 @@ public class UserController {
     public ResponseEntity<User> findByEmail(@PathVariable String email) {
         User userByEmail = userService.findByEmail(email);
         System.out.println("User by Email" + userByEmail);
-        if(userByEmail != null){
+        if (userByEmail != null) {
             System.out.println("HttpStatus.OK" + userByEmail);
             return new ResponseEntity<User>(userService.findByEmail(email), HttpStatus.OK);
-        } else if ( userByEmail == null){
+        } else if (userByEmail == null) {
             System.out.println("HttpStatus.NOT_FOUND" + userByEmail);
             return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
         }
@@ -49,7 +85,7 @@ public class UserController {
     }
 
     @PostMapping("/users/create")
-    public ResponseEntity<User> create(@RequestBody User user){
+    public ResponseEntity<User> create(@RequestBody User user) {
         User newUser = user;
         System.out.println("Create User" + newUser);
         userRepository.save(user);
@@ -73,11 +109,6 @@ public class UserController {
     public ResponseEntity<User> deleteById(@PathVariable UUID id) {
         userRepository.deleteById(id);
         return new ResponseEntity<User>(userService.findById(id), HttpStatus.OK);
-    }
-
-    @GetMapping("test/user")
-    public ResponseEntity<String> user(){
-        return new ResponseEntity<String>("Success!", HttpStatus.OK);
     }
 
 }
