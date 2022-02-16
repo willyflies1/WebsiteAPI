@@ -1,7 +1,7 @@
 package com.api.website.service;
 
 import com.api.website.controller.LoggingController;
-import com.api.website.dto.WalletAccountSnapshotDto;
+import com.api.website.model.dto.WalletAccountSnapshotDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

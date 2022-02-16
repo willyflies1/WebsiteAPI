@@ -1,6 +1,6 @@
 package com.api.website.repository;
 
-import com.api.website.model.User;
+import com.api.website.model.dto.UserDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,20 +10,26 @@ import javax.transaction.Transactional;
 import java.util.UUID;
 
 @Repository("users")
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface UserRepository extends JpaRepository<UserDto, Integer> {
 
-    @Query("SELECT user FROM users user WHERE user.email = ?1")
-    public User getByEmail(String email);
+    @Query(value = "SELECT * FROM users WHERE email = ?1", nativeQuery = true)
+    public UserDto findByEmail(String email);
 
-    @Query("SELECT user FROM users user WHERE user.lastname = ?1")
-    public User getByLastname(String lastname);
+    @Query(value = "SELECT * FROM users WHERE username = ?1", nativeQuery = true)
+    public UserDto findByUsername(String username);
+
+//    @Transactional
+//    @Query("INSERT INTO users(id, username, email, password)" +
+//            "VALUES (?1, ?2, ?3, ?4)" +
+//            "RETURNING id")
+//    public String createUser(UUID id, String username, String email, String password);
 
     // Requires @Transactional & @Modifying when modifying an existing record
     @Transactional
     @Modifying
-    @Query("DELETE FROM users WHERE id = ?1")
+    @Query(value = "DELETE FROM users WHERE id = ?1", nativeQuery = true)
     public Integer deleteById(UUID id);
 
-    @Query("SELECT user FROM users user WHERE user.id = ?1")
-    public User getByUUID(UUID id);
+    @Query(value = "SELECT * FROM users WHERE id = ?1", nativeQuery = true)
+    public UserDto findByUUID(UUID id);
 }

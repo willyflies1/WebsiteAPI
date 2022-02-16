@@ -1,4 +1,4 @@
-package com.api.website.dto;
+package com.api.website.model.dto;
 
 public class CandlestickDataDto {
     private final double ignore;  // ????

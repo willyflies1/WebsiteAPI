@@ -1,7 +1,7 @@
 package com.api.website.controller.binance;
 
 import com.api.website.controller.LoggingController;
-import com.api.website.dto.AccountInformationDto;
+import com.api.website.model.dto.AccountInformationDto;
 import com.binance.connector.client.impl.SpotClientImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

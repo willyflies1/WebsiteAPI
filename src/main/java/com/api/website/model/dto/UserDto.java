@@ -1,15 +1,20 @@
-package com.api.website.model;
+package com.api.website.model.dto;
 
+import com.api.website.model.Role;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
+
+import static javax.persistence.FetchType.EAGER;
 
 @Entity(name="users")
 @Table(name = "users")
-public class User {
+public class UserDto {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     @GeneratedValue(generator = "uuid")
@@ -17,11 +22,8 @@ public class User {
     @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID id;
 
-    @Column(name="firstname")
-    private String firstname;
-
-    @Column(name="lastname")
-    private String lastname;
+    @Column(name="username")
+    private String username;
 
     @Column(name="email")
     private String email;
@@ -35,12 +37,15 @@ public class User {
     @Column(name = "last_login", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime lastLogin;
 
-    public User() {}
+    @Column(name = "roles")
+    @ManyToMany(fetch = EAGER)
+    private Collection<Role> roles = new ArrayList<>();
 
-    public User(String firstname, String lastname, String email, String password) {
+    public UserDto() {}
+
+    public UserDto(String username, String email, String password) {
         this.id = UUID.randomUUID();
-        this.firstname = firstname;
-        this.lastname = lastname;
+        this.username = username;
         this.email = email;
         this.password = password;
         this.createdOn = OffsetDateTime.now();
@@ -75,20 +80,12 @@ public class User {
         this.id = id;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getUsername() {
+        return username;
     }
 
-    public void setFirstName(String firstname) {
-        this.firstname = firstname;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastName(String lastname) {
-        this.lastname = lastname;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -105,5 +102,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Collection<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Collection<Role> roles) {
+        this.roles = roles;
     }
 }

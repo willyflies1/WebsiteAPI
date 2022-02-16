@@ -2,8 +2,8 @@ package com.api.website.controller;
 
 import com.api.website.model.MinerDashboard;
 import com.api.website.model.PoolStatatistics;
-import com.api.website.dto.MinerDashboardDto;
-import com.api.website.dto.PoolStatsDto;
+import com.api.website.model.dto.MinerDashboardDto;
+import com.api.website.model.dto.PoolStatsDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

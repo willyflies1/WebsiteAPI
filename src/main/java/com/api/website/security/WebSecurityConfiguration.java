@@ -1,18 +1,20 @@
 package com.api.website.security;
 
+import com.api.website.security.component.CustomAuthenticationProvider;
 import com.api.website.security.filter.JwtRequestFilter;
 import com.api.website.security.service.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -33,35 +35,61 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
+    @Autowired
+    private CustomAuthenticationProvider authProvider;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+//    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+//    @Autowired
+//    private CsrfTokenFilter csrfTokenFilter;
+
+    @Value("${security.enable.csrf}")
+    private boolean csrfEnabled;
+
+    @Value("${security.enable.cors}")
+    private boolean corsEnabled;
+
+    public WebSecurityConfiguration() {
+    }
+
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http.httpBasic()
+                .authenticationEntryPoint(new AuthenticationEntryPoint())
                 .and()
                 .authorizeRequests()
-                .antMatchers("/authenticate").permitAll()   // "/test/*", "/test/login",
+                .antMatchers(HttpMethod.GET, "/authenticate").permitAll()   // "/test/*", "/test/login",
+                .antMatchers(HttpMethod.POST, "/users/create").permitAll()
                 .anyRequest().authenticated()
                 .and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .cors()
-                .configurationSource(corsConfigurationSource())
-                .and()
-//                .csrf().disable();
-                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        if (corsEnabled) {
+            http.cors().configurationSource(corsConfigurationSource());
+        }
+
+        if (csrfEnabled) {
+            http.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+        } else {
+            http.csrf().disable();
+        }
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(myUserDetailsService);
-
+        auth.userDetailsService(myUserDetailsService).passwordEncoder(passwordEncoder);
+        auth.authenticationProvider(authProvider);
         super.configure(auth);
     }
 
     @Bean
     UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "OPTIONS", "POST"));
         List<String> headerList = new ArrayList<String>();
         headerList.add("x-auth-token");
@@ -79,8 +107,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-    }
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//
+////        return NoOpPasswordEncoder.getInstance();
+//    }
+
+
 }
