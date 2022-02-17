@@ -53,6 +53,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<Role> getRoles() {
+        return roleRepository.findAll();
+    }
+
+    @Override
     public Role saveRole(Role role) {
         logger.info("Saving new role {} to the database", role.getName());
         return roleRepository.save(role);

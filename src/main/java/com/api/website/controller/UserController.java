@@ -116,6 +116,11 @@ public class UserController {
         return new ResponseEntity<UserDto>(newUserDto, HttpStatus.CREATED);
     }
 
+    @GetMapping("/role/all")
+    public ResponseEntity<List<Role>> getRoles(){
+        return ResponseEntity.ok().body(userService.getRoles());
+    }
+
     @PostMapping("/role/save")
     public ResponseEntity<Role> saveRole(@RequestBody Role role) {
         return ResponseEntity.ok().body(userService.saveRole(role));
