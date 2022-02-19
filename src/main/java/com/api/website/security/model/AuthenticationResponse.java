@@ -1,13 +1,17 @@
 package com.api.website.security.model;
 
 public class AuthenticationResponse {
-    private final String jwt;
+    private final String _accessJwt;
+    private final String _refreshJwt;
 
-    public AuthenticationResponse(String jwt) {
-        this.jwt = jwt;
+    public AuthenticationResponse(String _accessJwt, String _refreshJwt) {
+        this._accessJwt = _accessJwt;
+        this._refreshJwt = _refreshJwt;
     }
 
-    public String getJwt() {
-        return jwt;
+    public String getAccessJwt() {
+        return _accessJwt;
     }
+
+    public String getRefreshJwt() { return _refreshJwt; }
 }

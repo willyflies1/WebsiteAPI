@@ -9,6 +9,7 @@ import com.api.website.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +23,9 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public List<UserDto> getUsers() {
@@ -49,6 +53,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto saveUser(UserDto user) {
         logger.info("Saving new user to the database");
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 

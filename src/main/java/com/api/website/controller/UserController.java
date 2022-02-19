@@ -1,9 +1,9 @@
 package com.api.website.controller;
 
 
-import com.api.website.model.dto.UserDto;
 import com.api.website.model.Role;
 import com.api.website.model.RoleToUserForm;
+import com.api.website.model.dto.UserDto;
 import com.api.website.repository.UserRepository;
 import com.api.website.security.model.AuthenticationResponse;
 import com.api.website.security.service.JwtUtil;
@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.ui.Model;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,9 +61,14 @@ public class UserController {
             return new ResponseEntity<String>("Username not found", HttpStatus.BAD_REQUEST);
         }
         try {
+            Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            userDto.getRoles().forEach(role ->
+                    authorities.add(new SimpleGrantedAuthority(role.getName()))
+            );
+
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username,
-                            password)
+                            password, authorities)
             );
 
         } catch (BadCredentialsException e) {
@@ -69,9 +77,10 @@ public class UserController {
 
         final UserDetails userDetails = userDetailsService
                 .loadUserByUsername(username);
-        final String jwt = jwtUtil.generateToken(userDetails);
+        final String accessJwt = jwtUtil.generateToken(userDetails);
+        final String refreshJwt = jwtUtil.generateRefreshToken(userDetails);
 
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+        return ResponseEntity.ok(new AuthenticationResponse(accessJwt, refreshJwt));
     }
 
     @GetMapping("/users")
@@ -106,18 +115,21 @@ public class UserController {
         UserDto duplicateUser = userService.findByUsername(userDto.getUsername());
         if (duplicateUser != null) {
             return new ResponseEntity<String>("Duplicate username", HttpStatus.BAD_REQUEST);
-        } else if (userService.findByEmail(userDto.getEmail()) != null){
+        } else if (userService.findByEmail(userDto.getEmail()) != null) {
             return new ResponseEntity<String>("Duplicate email address", HttpStatus.BAD_REQUEST);
         }
 
         System.out.println("Create User" + newUserDto.toString());
 
-        userRepository.save(userDto);
+//        userRepository.save(userDto);
+        // ** Create user and add basic user role as default
+        userService.saveUser(userDto);
+        userService.addRoleToUser(userDto.getUsername(), RoleName.ROLE_USER.toString());
         return new ResponseEntity<UserDto>(newUserDto, HttpStatus.CREATED);
     }
 
     @GetMapping("/role/all")
-    public ResponseEntity<List<Role>> getRoles(){
+    public ResponseEntity<List<Role>> getRoles() {
         return ResponseEntity.ok().body(userService.getRoles());
     }
 
