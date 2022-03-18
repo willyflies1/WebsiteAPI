@@ -53,7 +53,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("${security.enable.cors}")
     private boolean corsEnabled;
 
-    private String GET_REQUESTS_ROLE_USER = "";
     private String GET_REQUESTS_PERMIT_ALL = "/authenticate";
     private String POST_REQUESTS_ROLE_ADMIN = "/users/create";
 
@@ -64,9 +63,13 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         http.httpBasic().authenticationEntryPoint(new AuthenticationEntryPoint());
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.authorizeRequests().antMatchers(HttpMethod.GET, GET_REQUESTS_PERMIT_ALL).permitAll();   // "/test/*", "/test/login",
+        http.authorizeRequests().antMatchers(HttpMethod.GET, GET_REQUESTS_PERMIT_ALL, "/refreshToken").permitAll();   // "/test/*", "/test/login",
+        http.authorizeRequests().antMatchers(HttpMethod.GET, "/users").hasAnyAuthority(RoleName.ROLE_ADMIN.toString());
+        http.authorizeRequests().antMatchers(HttpMethod.GET, "/users/**").hasAnyAuthority(RoleName.ROLE_USER.toString());
         http.authorizeRequests().antMatchers(HttpMethod.POST, POST_REQUESTS_ROLE_ADMIN).hasAnyAuthority(RoleName.ROLE_ADMIN.toString());
         http.authorizeRequests().anyRequest().authenticated();
+
+        http.logout().logoutUrl("/user/logout").invalidateHttpSession(true).deleteCookies("Authorization");
 
 
         if (corsEnabled) {

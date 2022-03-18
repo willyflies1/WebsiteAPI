@@ -7,26 +7,31 @@ import com.api.website.model.dto.UserDto;
 import com.api.website.repository.UserRepository;
 import com.api.website.security.model.AuthenticationResponse;
 import com.api.website.security.service.JwtUtil;
+import com.api.website.security.service.MyUserDetailsService;
 import com.api.website.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 @RestController
@@ -41,6 +46,8 @@ public class UserController {
     private UserDetailsService userDetailsService;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private MyUserDetailsService myUserDetailsService;
 
     @GetMapping("/authenticate")
     public ResponseEntity<?> getAuthenticationToken(
@@ -59,7 +66,10 @@ public class UserController {
         UserDto userDto = userService.findByUsername(username);
         if (userDto == null) {
             return new ResponseEntity<String>("Username not found", HttpStatus.BAD_REQUEST);
+        } else if(!userDto.getPassword().equals(password)){
+            return new ResponseEntity<String>("Incorrect Password", HttpStatus.BAD_REQUEST);
         }
+
         try {
             Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
             userDto.getRoles().forEach(role ->
@@ -81,6 +91,43 @@ public class UserController {
         final String refreshJwt = jwtUtil.generateRefreshToken(userDetails);
 
         return ResponseEntity.ok(new AuthenticationResponse(accessJwt, refreshJwt));
+    }
+
+
+
+    @GetMapping("/refreshToken")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        final String authrorizationHeader = request.getHeader("Authorization");
+        String username = null;
+        String refreshJwt = null;
+        String[] roles;
+
+        if (authrorizationHeader != null && authrorizationHeader.startsWith("Bearer ")) {
+            refreshJwt = authrorizationHeader.substring("Bearer ".length());
+            username = jwtUtil.extractUsername(refreshJwt);
+            roles = jwtUtil.extractRoles(refreshJwt);
+            if (username != null) {
+                UserDetails userDetails = this.myUserDetailsService.loadUserByUsername(username);
+
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                usernamePasswordAuthenticationToken
+                        .setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request)
+                        );
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                // Send back the accessToken and refreshToken
+                Map<String, String> tokens = new HashMap<>();
+                tokens.put("accessJwt", jwtUtil.generateToken(userDetails));
+                tokens.put("refreshJwt", refreshJwt);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+                return ResponseEntity.ok(new AuthenticationResponse(jwtUtil.generateToken(userDetails), refreshJwt));
+            }
+        } else {
+            throw new RuntimeException("Missing refresh token");
+        }
+        return ResponseEntity.internalServerError().body("Failed to refresh token due to missing implementation.");
     }
 
     @GetMapping("/users")
@@ -121,7 +168,6 @@ public class UserController {
 
         System.out.println("Create User" + newUserDto.toString());
 
-//        userRepository.save(userDto);
         // ** Create user and add basic user role as default
         userService.saveUser(userDto);
         userService.addRoleToUser(userDto.getUsername(), RoleName.ROLE_USER.toString());

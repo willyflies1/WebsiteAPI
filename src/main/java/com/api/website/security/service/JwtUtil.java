@@ -19,6 +19,19 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public String[] extractRoles(String token) {
+        final String rolesString = extractAllClaims(token).get("roles").toString();
+        String rolesArray[] = rolesString.substring(1, rolesString.length() - 1).split(",");
+        // ** Remove the leading characters "{" || " {" as well as the trailing character "}"
+        String resultArray[] = new String[rolesArray.length];
+        for (int i = 0; i < rolesArray.length; i++) {
+            resultArray[i] = rolesArray[i].startsWith("{")
+                    ? rolesArray[i].substring("{authority=".length(), rolesArray[i].length() - 1)
+                    : rolesArray[i].substring("{authority=".length()+1, rolesArray[i].length() - 1);
+        }
+        return resultArray;
+    }
+
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
@@ -49,12 +62,16 @@ public class JwtUtil {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername(), 300);
+        // Add all roles to claims
+        claims.put("roles", userDetails.getAuthorities());
+        return createToken(claims, userDetails.getUsername(), 30);
     }
 
-    public String generateRefreshToken(UserDetails userDetails){
+    public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername(), 300);
+        // Add all roles to claims
+        claims.put("roles", userDetails.getAuthorities());
+        return createToken(claims, userDetails.getUsername(), 600);
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
