@@ -64,7 +64,7 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         // Add all roles to claims
         claims.put("roles", userDetails.getAuthorities());
-        return createToken(claims, userDetails.getUsername(), 30);
+        return createToken(claims, userDetails.getUsername(), 300);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
