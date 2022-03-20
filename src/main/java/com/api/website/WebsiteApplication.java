@@ -1,6 +1,6 @@
 package com.api.website;
 
-import com.api.website.repositories.UserRepository;
+import com.api.website.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -8,7 +8,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+@CrossOrigin(origins="*")	// http://localhost:4200
 @SpringBootApplication
 public class WebsiteApplication implements CommandLineRunner {
 
@@ -23,6 +27,10 @@ public class WebsiteApplication implements CommandLineRunner {
 		return  new ModelMapper();
 	}
 
+	@Bean
+	public PasswordEncoder passwordEncoder(){
+		return new BCryptPasswordEncoder();
+	}
 
 
 	public static void main(String[] args) {
@@ -31,17 +39,12 @@ public class WebsiteApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-//		String sql = "INSERT INTO users ( firstName, lastName, email, password ) VALUES ("
-//				+ "'Maxxon', 'Jacques', 'max@email.com', 'max123')";
-//		int rows = jdbcTemplate.update(sql);
-//		if(rows > 0){
-//			System.out.println("A new row has been inserted to 'users'.");
-//		}
-//		List<User> users = userRepository.listAll();
-//		users.forEach(user -> {
-//			System.out.println(user);
-//		});
 	}
+
+//	@RequestMapping("/token")
+//	public Map<String,String> token(HttpSession session){
+//		return Collections.singletonMap("token", session.getId());
+//	}
 
 
 }
