@@ -1,6 +1,7 @@
 package com.api.website.service;
 
 import com.api.website.model.Role;
+import com.api.website.model.User;
 import com.api.website.model.dto.UserDto;
 
 import java.util.List;
@@ -24,4 +25,6 @@ public interface UserService {
     Role saveRole(Role role);
 
     void addRoleToUser(String username, String roleName);
+
+    User deleteUser(String username);
 }

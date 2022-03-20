@@ -27,7 +27,7 @@ public interface UserRepository extends JpaRepository<UserDto, Integer> {
     // Requires @Transactional & @Modifying when modifying an existing record
     @Transactional
     @Modifying
-    @Query(value = "DELETE FROM users WHERE id = ?1", nativeQuery = true)
+    @Query(value = "DELETE FROM users WHERE id = CAST(ENCODE(?1, 'hex') AS UUID)", nativeQuery = true)
     public Integer deleteById(UUID id);
 
     @Query(value = "SELECT * FROM users WHERE id = ?1", nativeQuery = true)

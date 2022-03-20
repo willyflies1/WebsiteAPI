@@ -1,6 +1,7 @@
 package com.api.website.model.dto;
 
 import com.api.website.model.Role;
+import com.api.website.model.User;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -12,7 +13,7 @@ import java.util.UUID;
 
 import static javax.persistence.FetchType.EAGER;
 
-@Entity(name="users")
+@Entity(name = "users")
 @Table(name = "users")
 public class UserDto {
     @Id
@@ -22,10 +23,10 @@ public class UserDto {
     @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID id;
 
-    @Column(name="username")
+    @Column(name = "username")
     private String username;
 
-    @Column(name="email")
+    @Column(name = "email")
     private String email;
 
     @Column(name = "password")
@@ -38,10 +39,13 @@ public class UserDto {
     private OffsetDateTime lastLogin;
 
     @Column(name = "roles")
-    @ManyToMany(fetch = EAGER)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
-    public UserDto() {}
+    /* Constructors */
+
+    public UserDto() {
+    }
 
     public UserDto(String username, String email, String password) {
         this.id = UUID.randomUUID();
@@ -51,8 +55,10 @@ public class UserDto {
         this.createdOn = OffsetDateTime.now();
     }
 
-    /* Constructors */
-
+    /* Modifiers */
+    public User convertToUser(){
+        return new User(this.id, this.username, this.email, this.createdOn, this.roles);
+    }
 
     /* Getters and Setters */
 

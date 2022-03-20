@@ -3,6 +3,7 @@ package com.api.website.controller;
 
 import com.api.website.model.Role;
 import com.api.website.model.RoleToUserForm;
+import com.api.website.model.User;
 import com.api.website.model.dto.UserDto;
 import com.api.website.repository.UserRepository;
 import com.api.website.security.model.AuthenticationResponse;
@@ -22,6 +23,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +50,8 @@ public class UserController {
     private JwtUtil jwtUtil;
     @Autowired
     private MyUserDetailsService myUserDetailsService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/authenticate")
     public ResponseEntity<?> getAuthenticationToken(
@@ -66,7 +70,7 @@ public class UserController {
         UserDto userDto = userService.findByUsername(username);
         if (userDto == null) {
             return new ResponseEntity<String>("Username not found", HttpStatus.BAD_REQUEST);
-        } else if(!userDto.getPassword().equals(password)){
+        } else if (!passwordEncoder.matches(password, userDto.getPassword())) {
             return new ResponseEntity<String>("Incorrect Password", HttpStatus.BAD_REQUEST);
         }
 
@@ -90,9 +94,8 @@ public class UserController {
         final String accessJwt = jwtUtil.generateToken(userDetails);
         final String refreshJwt = jwtUtil.generateRefreshToken(userDetails);
 
-        return ResponseEntity.ok(new AuthenticationResponse(accessJwt, refreshJwt));
+        return ResponseEntity.ok(new AuthenticationResponse(accessJwt, refreshJwt, userDto.convertToUser()));
     }
-
 
 
     @GetMapping("/refreshToken")
@@ -122,7 +125,8 @@ public class UserController {
                 tokens.put("refreshJwt", refreshJwt);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
-                return ResponseEntity.ok(new AuthenticationResponse(jwtUtil.generateToken(userDetails), refreshJwt));
+                return ResponseEntity.ok(new AuthenticationResponse(jwtUtil.generateToken(userDetails), refreshJwt,
+                        userService.findByUsername(username).convertToUser()));
             }
         } else {
             throw new RuntimeException("Missing refresh token");
@@ -202,9 +206,21 @@ public class UserController {
         return new ResponseEntity<UserDto>(updatedUserDto, HttpStatus.OK);
     }
 
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<UserDto> deleteById(@PathVariable UUID id) {
-        userRepository.deleteById(id);
-        return new ResponseEntity<UserDto>(userService.findById(id), HttpStatus.OK);
+    @DeleteMapping("/users/delete")
+    public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String authorization) {
+        String base24Token = authorization.substring("Bearer ".length());
+        String username = jwtUtil.extractUsername(base24Token);
+        if (username != null) {
+            // username is unique
+            User user = userService.deleteUser(username);
+            return new ResponseEntity<User>(user, HttpStatus.OK);
+        }
+        return new ResponseEntity<String>("Could not extract username from token. ", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+//    @DeleteMapping("/users/{id}")
+//    public ResponseEntity<UserDto> deleteById(@PathVariable UUID id) {
+//        userRepository.deleteById(id);
+//        return new ResponseEntity<UserDto>(userService.findById(id), HttpStatus.OK);
+//    }
 }

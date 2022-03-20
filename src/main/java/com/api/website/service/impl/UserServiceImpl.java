@@ -1,14 +1,16 @@
 package com.api.website.service.impl;
 
 import com.api.website.controller.LoggingController;
-import com.api.website.model.dto.UserDto;
 import com.api.website.model.Role;
+import com.api.website.model.User;
+import com.api.website.model.dto.UserDto;
 import com.api.website.repository.RoleRepository;
 import com.api.website.repository.UserRepository;
 import com.api.website.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -75,5 +77,20 @@ public class UserServiceImpl implements UserService {
         logger.info("Adding role {} to user {}", roleName, username);
         user.getRoles().add(role);
         userRepository.save(user);
+    }
+
+    @Override
+    public User deleteUser(String username) {
+        UserDto userDto = findByUsername(username);
+
+        // delete by id
+        try {
+            UUID id = userDto.getId();
+            logger.info("deleting username {} with id {}", username, id.toString());
+            userRepository.deleteById(id);
+            return userDto.convertToUser();
+        } catch (InvalidDataAccessResourceUsageException e) {
+            throw new InvalidDataAccessResourceUsageException("Bad SQL on delete user.");
+        }
     }
 }
