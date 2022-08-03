@@ -3,11 +3,12 @@ package com.api.website.service;
 import com.api.website.model.Role;
 import com.api.website.model.User;
 import com.api.website.model.dto.UserDto;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
-//@Service("userService")
+@Service("userService")
 public interface UserService {
 
     List<UserDto> getUsers();

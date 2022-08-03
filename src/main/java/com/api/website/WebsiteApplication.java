@@ -1,5 +1,6 @@
 package com.api.website;
 
+import com.api.website.repository.AwsCloudFilesRepository;
 import com.api.website.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 @CrossOrigin(origins="*")	// http://localhost:4200
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.api.website"})
 public class WebsiteApplication implements CommandLineRunner {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	private AwsCloudFilesRepository awsCloudFilesRepository;
 
 	@Autowired
 	private UserRepository userRepository;
