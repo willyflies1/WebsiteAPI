@@ -1,14 +1,12 @@
 package com.api.website.controller.binance;
 
 import com.api.website.controller.LoggingController;
-import com.api.website.model.dto.*;
 import com.api.website.model.CandlestickData;
-import com.api.website.model.SnapshotType;
 import com.api.website.model.TickerPriceChangeStatistics;
+import com.api.website.model.dto.CandlestickDataDto;
+import com.api.website.model.dto.TickerPriceChangeStatisticsDto;
 import com.api.website.service.Request;
-import com.binance.connector.client.impl.SpotClientImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.EnumUtils;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +24,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -53,93 +52,93 @@ public class BinanceWalletController {
 
     Logger logger = LoggerFactory.getLogger(LoggingController.class);
 
-    @GetMapping("wallet/accountSnapshot")
-    @ResponseBody
-    public ResponseEntity<WalletAccountSnapshotDto> getAccountSnapshot(
-            @RequestParam(name = "type", required = true, defaultValue = "SPOT") String type,
-            @RequestParam(name = "startTime", required = false) Optional<Long> startTime,
-            @RequestParam(name = "endTime", required = false) Optional<Long> endTime,
-            @RequestParam(name = "limit", required = false) Optional<Integer> limit,
-            @RequestParam(name = "recvWindow", required = false) @Min(5) @Max(30) Optional<Long> recvWindow
-    ) {
-        // - type
-        if (!EnumUtils.isValidEnum(SnapshotType.class, type)) {
-            return new ResponseEntity("Type parameter needs to be value 'SPOT', 'MARGIN' or 'FUTURE'",
-                    HttpStatus.BAD_REQUEST);
-        }
+//    @GetMapping("wallet/accountSnapshot")
+//    @ResponseBody
+//    public ResponseEntity<WalletAccountSnapshotDto> getAccountSnapshot(
+//            @RequestParam(name = "type", required = true, defaultValue = "SPOT") String type,
+//            @RequestParam(name = "startTime", required = false) Optional<Long> startTime,
+//            @RequestParam(name = "endTime", required = false) Optional<Long> endTime,
+//            @RequestParam(name = "limit", required = false) Optional<Integer> limit,
+//            @RequestParam(name = "recvWindow", required = false) @Min(5) @Max(30) Optional<Long> recvWindow
+//    ) {
+//        // - type
+//        if (!EnumUtils.isValidEnum(SnapshotType.class, type)) {
+//            return new ResponseEntity("Type parameter needs to be value 'SPOT', 'MARGIN' or 'FUTURE'",
+//                    HttpStatus.BAD_REQUEST);
+//        }
+//
+//        // ** Create Uri to get binance wallet info
+//        parameters.put("type", type);
+//        if (!startTime.isEmpty()) parameters.put("startTime", startTime.get().toString());
+//        if (!endTime.isEmpty()) parameters.put("endTime", endTime.get().toString());
+//        if (!limit.isEmpty()) parameters.put("limit", limit.get().toString());
+//        if (!recvWindow.isEmpty())
+//            parameters.put("recvWindow", recvWindow.get().toString());    // Default is 5000 on Binance side
+//        ResponseEntity<WalletAccountSnapshotDto> binanceResponse;
+//        try {
+//            // Binance Connector
+//            SpotClientImpl client = new SpotClientImpl(BINANCE_API_KEY, BINANCE_SECRET_KEY, baseUrlUS);
+//            String response = client.createWallet().accountSnapshot(parameters);
+//            parameters.clear();
+//            String allCoinsResponse = client.createWallet().depositHistory(parameters);
+//            logger.info("Deposit History" + allCoinsResponse);
+//            // Map Object for response
+//            ObjectMapper mapper = new ObjectMapper();
+//            Map<String, Object> map = mapper.readValue(response, Map.class);
+//            WalletAccountSnapshotDto dto = mapper.readValue(response, WalletAccountSnapshotDto.class);
+//            logger.info("Response collected. Sending: " + dto.toString());
+//            binanceResponse = new ResponseEntity<WalletAccountSnapshotDto>(dto, HttpStatus.OK);
+//        } catch (Exception e) {
+//            logger.error("Failed to collect response", e);
+//            return new ResponseEntity<WalletAccountSnapshotDto>(new WalletAccountSnapshotDto(), HttpStatus.BAD_REQUEST);
+//        }
+//        parameters.clear();
+//        return binanceResponse;
+//    }
 
-        // ** Create Uri to get binance wallet info
-        parameters.put("type", type);
-        if (!startTime.isEmpty()) parameters.put("startTime", startTime.get().toString());
-        if (!endTime.isEmpty()) parameters.put("endTime", endTime.get().toString());
-        if (!limit.isEmpty()) parameters.put("limit", limit.get().toString());
-        if (!recvWindow.isEmpty())
-            parameters.put("recvWindow", recvWindow.get().toString());    // Default is 5000 on Binance side
-        ResponseEntity<WalletAccountSnapshotDto> binanceResponse;
-        try {
-            // Binance Connector
-            SpotClientImpl client = new SpotClientImpl(BINANCE_API_KEY, BINANCE_SECRET_KEY, baseUrlUS);
-            String response = client.createWallet().accountSnapshot(parameters);
-            parameters.clear();
-            String allCoinsResponse = client.createWallet().depositHistory(parameters);
-            logger.info("Deposit History" + allCoinsResponse);
-            // Map Object for response
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> map = mapper.readValue(response, Map.class);
-            WalletAccountSnapshotDto dto = mapper.readValue(response, WalletAccountSnapshotDto.class);
-            logger.info("Response collected. Sending: " + dto.toString());
-            binanceResponse = new ResponseEntity<WalletAccountSnapshotDto>(dto, HttpStatus.OK);
-        } catch (Exception e) {
-            logger.error("Failed to collect response", e);
-            return new ResponseEntity<WalletAccountSnapshotDto>(new WalletAccountSnapshotDto(), HttpStatus.BAD_REQUEST);
-        }
-        parameters.clear();
-        return binanceResponse;
-    }
-
-    @GetMapping("/capital/deposit/hisrec")
-    @ResponseBody
-    public ResponseEntity<DepositHistoryCollectionDto> getDepositHistory(
-            @RequestParam(name = "coin", required = false) Optional<String> coin,
-            @RequestParam(name = "status", required = false) Optional<Integer> status,
-            @RequestParam(name = "startTime", required = false) Optional<Long> startTime,
-            @RequestParam(name = "endTime", required = false) Optional<Long> endTime,
-            @RequestParam(name = "offset", required = false) Optional<Integer> offset,
-            @RequestParam(name = "limit", required = false) Optional<Integer> limit,
-            @RequestParam(name = "recvWindow", required = false) Optional<Long> recvWindow
-    ) {
-        ResponseEntity<DepositHistoryCollectionDto> binanceResponse = null;
-
-        // ** Add parameters to LinkedHashMap
-        if (!coin.isEmpty()) parameters.put("coin", coin.get());
-        if (!status.isEmpty()) parameters.put("status", status.get());
-        if (!startTime.isEmpty()) parameters.put("startTime", startTime.get());
-        if (!endTime.isEmpty()) parameters.put("endTime", endTime.get());
-        if (!offset.isEmpty()) parameters.put("offset", offset.get());
-        if (!limit.isEmpty()) parameters.put("limit", limit.get());
-        if (!recvWindow.isEmpty()) parameters.put("recvWindow", recvWindow.get());
-
-        // ** Get data from Binance endpoint
-        try {
-            SpotClientImpl client = new SpotClientImpl(BINANCE_API_KEY, BINANCE_SECRET_KEY, baseUrlUS);
-            String response = client.createWallet().depositHistory(parameters);
-            logger.info("Deposit History (Response): \n" + response);
-            modelMapper = new ModelMapper();
-            ArrayList<DepositHistoryDto> list = mapper.readValue(response,
-                    ArrayList.class);
-            DepositHistoryCollectionDto dto = modelMapper.map(response, DepositHistoryCollectionDto.class);
-            dto.setDeposits(list);
-            binanceResponse = new ResponseEntity<DepositHistoryCollectionDto>(dto, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        // ** Add to Db if needed
-
-        // ** Send response back on success
-        return binanceResponse != null
-                ? binanceResponse
-                : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+//    @GetMapping("/capital/deposit/hisrec")
+//    @ResponseBody
+//    public ResponseEntity<DepositHistoryCollectionDto> getDepositHistory(
+//            @RequestParam(name = "coin", required = false) Optional<String> coin,
+//            @RequestParam(name = "status", required = false) Optional<Integer> status,
+//            @RequestParam(name = "startTime", required = false) Optional<Long> startTime,
+//            @RequestParam(name = "endTime", required = false) Optional<Long> endTime,
+//            @RequestParam(name = "offset", required = false) Optional<Integer> offset,
+//            @RequestParam(name = "limit", required = false) Optional<Integer> limit,
+//            @RequestParam(name = "recvWindow", required = false) Optional<Long> recvWindow
+//    ) {
+//        ResponseEntity<DepositHistoryCollectionDto> binanceResponse = null;
+//
+//        // ** Add parameters to LinkedHashMap
+//        if (!coin.isEmpty()) parameters.put("coin", coin.get());
+//        if (!status.isEmpty()) parameters.put("status", status.get());
+//        if (!startTime.isEmpty()) parameters.put("startTime", startTime.get());
+//        if (!endTime.isEmpty()) parameters.put("endTime", endTime.get());
+//        if (!offset.isEmpty()) parameters.put("offset", offset.get());
+//        if (!limit.isEmpty()) parameters.put("limit", limit.get());
+//        if (!recvWindow.isEmpty()) parameters.put("recvWindow", recvWindow.get());
+//
+//        // ** Get data from Binance endpoint
+//        try {
+//            SpotClientImpl client = new SpotClientImpl(BINANCE_API_KEY, BINANCE_SECRET_KEY, baseUrlUS);
+//            String response = client.createWallet().depositHistory(parameters);
+//            logger.info("Deposit History (Response): \n" + response);
+//            modelMapper = new ModelMapper();
+//            ArrayList<DepositHistoryDto> list = mapper.readValue(response,
+//                    ArrayList.class);
+//            DepositHistoryCollectionDto dto = modelMapper.map(response, DepositHistoryCollectionDto.class);
+//            dto.setDeposits(list);
+//            binanceResponse = new ResponseEntity<DepositHistoryCollectionDto>(dto, HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//        // ** Add to Db if needed
+//
+//        // ** Send response back on success
+//        return binanceResponse != null
+//                ? binanceResponse
+//                : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
     @GetMapping("/ticker/24hr")
     @ResponseBody
