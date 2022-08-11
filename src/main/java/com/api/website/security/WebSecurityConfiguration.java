@@ -53,10 +53,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("${security.enable.cors}")
     private boolean corsEnabled;
 
-    private String GET_REQUESTS_PERMIT_ALL = "/authenticate";
-    private String POST_REQUESTS_PERMIT_ALL = "/users/create";
-//    private String POST_REQUESTS_ROLE_ADMIN = "/users/create";
-
     public WebSecurityConfiguration() {
     }
 
@@ -64,8 +60,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         http.httpBasic().authenticationEntryPoint(new AuthenticationEntryPoint());
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.authorizeRequests().antMatchers(HttpMethod.GET, GET_REQUESTS_PERMIT_ALL, "/refreshToken").permitAll();
-        http.authorizeRequests().antMatchers(HttpMethod.POST, POST_REQUESTS_PERMIT_ALL).permitAll();
+        http.authorizeRequests().antMatchers(HttpMethod.GET, "/authenticate", "/refreshToken").permitAll();
+        http.authorizeRequests().antMatchers(HttpMethod.POST, "/users/create").permitAll();
         // "/test/*", "/test/login",
         http.authorizeRequests().antMatchers(HttpMethod.GET, "/users").hasAnyAuthority(RoleName.ROLE_ADMIN.toString());
         http.authorizeRequests().antMatchers(HttpMethod.GET, "/users/**").hasAnyAuthority(RoleName.ROLE_USER.toString());
